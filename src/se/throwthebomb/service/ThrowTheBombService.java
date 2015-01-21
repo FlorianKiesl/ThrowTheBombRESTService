@@ -1,6 +1,9 @@
 package se.throwthebomb.service;
 
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.TreeSet;
 
 import javax.ws.rs.GET;  
 import javax.ws.rs.Path;  
@@ -10,6 +13,7 @@ import javax.ws.rs.core.MediaType;
 
 import se.throwthebombservice.data.Game;
 import se.throwthebombservice.data.Location;
+import se.throwthebombservice.data.MathVector;
 import se.throwthebombservice.data.ThrowTheBomb;
 import se.throwthebombservice.data.User;
 
@@ -37,19 +41,44 @@ public class ThrowTheBombService {
 	public boolean throwBomb(@QueryParam("username") String userName
 			, @QueryParam("longitude") double longitude, @QueryParam("latitude") double latitude
 			, @QueryParam("XMathVector") double xMathVector, @QueryParam("YMathVector") double yMathVector ){	
+		
 		User userFrom = ThrowTheBomb.getInstance().getUser(userName);
 		userFrom.getLocation().setLatitude(latitude);
 		userFrom.getLocation().setLongitude(longitude);
 		
-//		ToDo: Calculate User for Bomb
-//		
-//		if (userFrom != null && userFrom.getName().compareTo(userNameFrom) == 0){
-//			User userTo = ThrowTheBomb.getInstance().getGame(gameName).getGameUsers().getUser(userNameTo);
-//			if (userTo != null){
-//				ThrowTheBomb.getInstance().getGame(gameName).setUserWithBomb(userTo);
-//				return true;
-//			}
-//		}
+		Game game = userFrom.getCurrentGame();
+		if (game == null) return false;
+		TreeSet<User> users = game.getGameUsers().getUserList();
+		ArrayList<User> usersAsList = new ArrayList<User>(users);
+		usersAsList.remove(userFrom);
+		
+		Location bombLocation = userFrom.getLocation();
+		
+		double maxAngle = 20;
+		User futureUserWithBomb = null;
+		double smallestAngle = maxAngle;
+		
+		MathVector viewVector = new MathVector(xMathVector, yMathVector);
+		
+		for (User u : usersAsList) {
+			
+			Location otherUserLocation = u.getLocation();
+			MathVector directVector = new MathVector(Math.toRadians(otherUserLocation.getLongitude()) - Math.toRadians(bombLocation.getLongitude()), Math.toRadians(otherUserLocation.getLatitude()) - Math.toRadians(bombLocation.getLatitude()));
+			
+		    double angle = Math.toDegrees(Math.acos(((viewVector.getX() * directVector.getX()) + (viewVector.getY() * directVector.getY())) / directVector.getNorm()));
+		    if ((angle < maxAngle) && (angle < smallestAngle)) {
+		    	
+		    	smallestAngle = angle;
+		    	futureUserWithBomb = u;
+		    }
+		    
+		}
+		
+		if (futureUserWithBomb != null) {
+			game.setUserWithBomb(futureUserWithBomb);
+			System.out.println("future: " + futureUserWithBomb.getName());		
+			return true;
+		}
 		return false;
 	}
 	
@@ -102,7 +131,8 @@ public class ThrowTheBombService {
 		}
 		else{
 			ret = game.joinGame(userName);
-			if (ret == true && game.getGameUsers().getUserList().size() == 0){
+			
+			if (ret == true && game.getGameUsers().getUserList().size() == 1){
 				
 				Thread startGameThread = new Thread(){
 
@@ -110,13 +140,23 @@ public class ThrowTheBombService {
 					public synchronized void start() {
 						super.start();
 						game.setStartTime(System.currentTimeMillis());
+//						game.setDuration(10000);
+						game.setTimeToGameStart(10000);
 					}
 
 					@Override
 					public void run() {
 						super.run();
 						try {
-							Thread.sleep(1000);
+							System.out.println("Start: " + game.getStartTime());
+							while(game.getTimeToGameStart() > 0){
+								Thread.sleep(1000);
+								game.setTimeToGameStart(game.getTimeToGameStart() - 1000);
+								System.out.println("Dauer: " + game.getTimeToGameStart());
+							}
+							game.setUserWithBomb(game.getGameUsers().getUserList().first());
+							
+							System.out.println("UserWithBomb: " + game.getUserWithBomb().getName());
 							
 						} catch (InterruptedException e) {
 							e.printStackTrace();
@@ -148,7 +188,7 @@ public class ThrowTheBombService {
 			return 10*60*1000;
 		}
 		
-		return game.getDuration() - (System.currentTimeMillis() - game.getStartTime());
+		return game.getTimeToGameStart();
 	}
 	
 	@GET
@@ -276,16 +316,16 @@ public class ThrowTheBombService {
 //		return ThrowTheBomb.getInstance().removeGame(name);
 //	}
 //	
-//	@GET
-//	@Path("/GetAllUsers")
-//	@Produces(MediaType.APPLICATION_XML)
-//	public List<User> getAllUsers(){
-//		List<User> userList = new ArrayList<User>();
-//		for(User user : ThrowTheBomb.getInstance().getUserList()){
-//			userList.add(User.getClonedUserWithoutCycle(user));
-//		}
-//		return userList;
-//	}
+	@GET
+	@Path("/GetAllUsers")
+	@Produces(MediaType.APPLICATION_XML)
+	public List<User> getAllUsers(){
+		List<User> userList = new ArrayList<User>();
+		for(User user : ThrowTheBomb.getInstance().getUserList()){
+			userList.add(User.getClonedUserWithoutCycle(user));
+		}
+		return userList;
+	}
 
 //    @POST
 //    @Path("/CreateUser")

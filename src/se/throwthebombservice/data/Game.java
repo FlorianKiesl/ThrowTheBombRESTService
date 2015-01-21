@@ -22,13 +22,15 @@ public class Game implements Comparable<Game>, Serializable {
 	private BombState bombState;
 	
 	private long startTimeinMs;
-	private long gameStartDurationInMs;
+//	private long gameStartDurationInMs;
+	private long timeToGameStart;
 	
 	public Game(){
 		this.name = "Default-Game";
 		this.gameUsers = new GameUsers();
 		this.invitedUsers = new InvitedUsers();
 		this.bombState = BombState.not_exploded;
+		this.timeToGameStart = 10*1000;
 	}
 	
 	public boolean joinGame(String userName){
@@ -37,6 +39,7 @@ public class Game implements Comparable<Game>, Serializable {
 			user.setAlive(true);
 			user.setPowerUp(PowerUp.NoPowerUp);
 			user.setChosenInvitedGame(this.getName());
+			user.setCurrentGame(this);
 			return this.getGameUsers().addUser(user);
 		}
 		return false;
@@ -106,14 +109,14 @@ public class Game implements Comparable<Game>, Serializable {
 	public void setChosenDuration(int chosenDuration) {
 		this.chosenDuration = chosenDuration;
 	}
-
-	public long getDuration() {
-		return gameStartDurationInMs;
-	}
-
-	public void setDuration(long duration) {
-		this.gameStartDurationInMs = duration;
-	}
+//
+//	public long getDuration() {
+//		return gameStartDurationInMs;
+//	}
+//
+//	public void setDuration(long duration) {
+//		this.gameStartDurationInMs = duration;
+//	}
 
 	public long getStartTime() {
 		return startTimeinMs;
@@ -135,6 +138,18 @@ public class Game implements Comparable<Game>, Serializable {
 	public int compareTo(Game o) {
 		return this.name.compareTo(o.getName());
 	}
+	
+	public long getTimeToGameStart() {
+		return timeToGameStart;
+	}
+
+	public void setTimeToGameStart(long timeToGameStart) {
+		this.timeToGameStart = timeToGameStart;
+	}
+
+//	public long timeToGameStart(){
+//		return this.getDuration() - (System.currentTimeMillis() - this.startTimeinMs);
+//	}
 	
 	public static Game getClonedGameWithoutCycles(Object object){
 		Game retGame = (Game) Game.deepClone(object);

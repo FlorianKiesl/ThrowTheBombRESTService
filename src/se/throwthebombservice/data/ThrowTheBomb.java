@@ -134,6 +134,51 @@ public class ThrowTheBomb {
 		loadDefaultLocation(newUser);
 		
 		newUser = new User();
+		newUser.setName("Johannes1");
+		newUser.setPwd("se2014");
+		newUser.setLogedIn(false);
+		newUser.setOnline(false);
+		newUser.setPowerUp(PowerUp.NoPowerUp);
+		getInstance().addUser(newUser);
+		loadDefaultLocation(newUser);
+		
+		newUser = new User();
+		newUser.setName("Johannes2");
+		newUser.setPwd("se2014");
+		newUser.setLogedIn(false);
+		newUser.setOnline(false);
+		newUser.setPowerUp(PowerUp.NoPowerUp);
+		getInstance().addUser(newUser);
+		loadDefaultLocation(newUser);
+		
+		newUser = new User();
+		newUser.setName("Johannes3");
+		newUser.setPwd("se2014");
+		newUser.setLogedIn(false);
+		newUser.setOnline(false);
+		newUser.setPowerUp(PowerUp.NoPowerUp);
+		getInstance().addUser(newUser);
+		loadDefaultLocation(newUser);
+		
+		newUser = new User();
+		newUser.setName("Johannes4");
+		newUser.setPwd("se2014");
+		newUser.setLogedIn(false);
+		newUser.setOnline(false);
+		newUser.setPowerUp(PowerUp.NoPowerUp);
+		getInstance().addUser(newUser);
+		loadDefaultLocation(newUser);
+		
+		newUser = new User();
+		newUser.setName("Johannes5");
+		newUser.setPwd("se2014");
+		newUser.setLogedIn(false);
+		newUser.setOnline(false);
+		newUser.setPowerUp(PowerUp.NoPowerUp);
+		getInstance().addUser(newUser);
+		loadDefaultLocation(newUser);
+		
+		newUser = new User();
 		newUser.setName("Alexander");
 		newUser.setPwd("se2014");
 		newUser.setLogedIn(false);
@@ -174,12 +219,17 @@ public class ThrowTheBomb {
 		getInstance().getUser("Johannes").addFriend(getInstance().getUser("Alexander"));
 		
 		this.getGame("JKU").inviteUser(getInstance().getUser("Florian"));
-		this.getGame("JKU").addUser(getInstance().getUser("Florian"));
+//		this.getGame("JKU").addUser(getInstance().getUser("Florian"));
 		this.getGame("JKU").inviteUser(getInstance().getUser("Johannes"));
+		this.getGame("JKU").inviteUser(getInstance().getUser("Johannes1"));
+		this.getGame("JKU").inviteUser(getInstance().getUser("Johannes2"));
+		this.getGame("JKU").inviteUser(getInstance().getUser("Johannes3"));
+		this.getGame("JKU").inviteUser(getInstance().getUser("Johannes4"));
+		this.getGame("JKU").inviteUser(getInstance().getUser("Johannes5"));
 		this.getGame("JKU").inviteUser(getInstance().getUser("Alexander"));
-		this.getGame("JKU").addUser(getInstance().getUser("Johannes"));
-		this.getGame("JKU").addUser(getInstance().getUser("Alexander"));
-		this.getGame("JKU").setUserWithBomb(getInstance().getUser("Florian"));
+//		this.getGame("JKU").addUser(getInstance().getUser("Johannes"));
+//		this.getGame("JKU").addUser(getInstance().getUser("Alexander"));
+//		this.getGame("JKU").setUserWithBomb(getInstance().getUser("Florian"));
 		
 		this.getGame("Keplergebäude").inviteUser(getInstance().getUser("Florian"));
 		
