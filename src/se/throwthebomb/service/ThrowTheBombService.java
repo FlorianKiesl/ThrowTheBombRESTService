@@ -38,13 +38,16 @@ public class ThrowTheBombService {
 	@GET
 	@Path("/ThrowBomb")
 	@Produces(MediaType.TEXT_PLAIN)
-	public boolean throwBomb(@QueryParam("username") String userName
-			, @QueryParam("longitude") double longitude, @QueryParam("latitude") double latitude
-			, @QueryParam("XMathVector") double xMathVector, @QueryParam("YMathVector") double yMathVector ){	
+	public  boolean throwBomb(@QueryParam("username") String userName			
+			, @QueryParam("XMathVector") double xMathVector, @QueryParam("YMathVector") double yMathVector
+			, @QueryParam("longitude") double longitude, @QueryParam("latitude") double latitude){	
 		
-		User userFrom = ThrowTheBomb.getInstance().getUser(userName);
-		userFrom.getLocation().setLatitude(latitude);
-		userFrom.getLocation().setLongitude(longitude);
+		System.out.println("bomb was throwen from " + userName);
+		User userFrom = ThrowTheBomb.getInstance().getUser(userName);		
+		
+		Location location = userFrom.getLocation();
+		location.setLongitude(longitude);
+		location.setLatitude(latitude);
 		
 		Game game = userFrom.getCurrentGame();
 		if (game == null) return false;
@@ -54,7 +57,7 @@ public class ThrowTheBombService {
 		
 		Location bombLocation = userFrom.getLocation();
 		
-		double maxAngle = 20;
+		double maxAngle = 45;
 		User futureUserWithBomb = null;
 		double smallestAngle = maxAngle;
 		
@@ -66,6 +69,7 @@ public class ThrowTheBombService {
 			MathVector directVector = new MathVector(Math.toRadians(otherUserLocation.getLongitude()) - Math.toRadians(bombLocation.getLongitude()), Math.toRadians(otherUserLocation.getLatitude()) - Math.toRadians(bombLocation.getLatitude()));
 			
 		    double angle = Math.toDegrees(Math.acos(((viewVector.getX() * directVector.getX()) + (viewVector.getY() * directVector.getY())) / directVector.getNorm()));
+		    System.out.println("angle: " + angle);
 		    if ((angle < maxAngle) && (angle < smallestAngle)) {
 		    	
 		    	smallestAngle = angle;
@@ -86,16 +90,15 @@ public class ThrowTheBombService {
 	@Path("/FindBomb")
 	@Produces(MediaType.TEXT_PLAIN)
 	public boolean findBomb(@QueryParam("username") String userName
-		, @QueryParam("longitude") double longitude, @QueryParam("latitude") double latitude
-		, @QueryParam("XMathVector") double xMathVector, @QueryParam("YMathVector") double yMathVector ){
+		, @QueryParam("XMathVector") double xMathVector, @QueryParam("YMathVector") double yMathVector
+		, @QueryParam("longitude") double longitude, @QueryParam("latitude") double latitude){
 		User user = ThrowTheBomb.getInstance().getUser(userName);
-		user.getLocation().setLatitude(latitude);
-		user.getLocation().setLongitude(longitude);
 		
 //		ToDo: Calculate User for Bomb. Same Method as ThrowBomb
 		
 		return false;
 	}
+	
 	
 	@GET
 	@Path("/Login")
@@ -140,21 +143,33 @@ public class ThrowTheBombService {
 					public synchronized void start() {
 						super.start();
 						game.setStartTime(System.currentTimeMillis());
-//						game.setDuration(10000);
-						game.setTimeToGameStart(10000);
 					}
 
 					@Override
-					public void run() {
+					public synchronized void run() {
 						super.run();
 						try {
 							System.out.println("Start: " + game.getStartTime());
-							while(game.getTimeToGameStart() > 0){
+							while(game.getTimeToGameStart() > 0 || game.getUsersAliveCount() > 1){ //runs until the game is over
 								Thread.sleep(1000);
 								game.setTimeToGameStart(game.getTimeToGameStart() - 1000);
-								System.out.println("Dauer: " + game.getTimeToGameStart());
+								//System.out.println("Time to/since game start: " + game.getTimeToGameStart());
+								game.setTimeToNextExplusion(game.getTimeToNextExplusion() - 1000);
+								//System.out.println("Time to next bomb explode: " + game.getTimeToNextExplusion());
+								
+								if(!game.isGameRunning() && game.getTimeToGameStart() <= 0) {
+									
+									game.setGameToRun();
+									if(game.getUsersAliveCount() >= 1)
+										game.setUserWithBomb(game.getGameUsers().getUserList().first());
+								}
+								else if(game.getTimeToNextExplusion() <= 0) {
+									
+									game.bombExploded();
+									game.setTimeToNextExplusion(game.getExplusionDuration());
+								}							
 							}
-							game.setUserWithBomb(game.getGameUsers().getUserList().first());
+							
 							
 							System.out.println("UserWithBomb: " + game.getUserWithBomb().getName());
 							
@@ -189,6 +204,17 @@ public class ThrowTheBombService {
 		}
 		
 		return game.getTimeToGameStart();
+	}
+	
+	@GET
+	@Path("/UsersAliveInGame")
+	@Produces(MediaType.TEXT_PLAIN)
+	public int usersAliveInGame(@QueryParam("username") String username){
+		Game game = ThrowTheBomb.getInstance().getUser(username).getCurrentGame();
+		if (game == null)
+		  return 0;
+		
+		return game.getUsersAliveCount();
 	}
 	
 	@GET

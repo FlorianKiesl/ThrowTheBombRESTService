@@ -6,6 +6,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.Iterator;
+import java.util.Random;
 import java.util.TreeSet;
 
 import javax.xml.bind.annotation.XmlRootElement;
@@ -18,12 +19,15 @@ public class Game implements Comparable<Game>, Serializable {
 	private InvitedUsers invitedUsers;
 	private int chosenRadius;
 	private int chosenDuration;
+	private int explusionDuration;
+	private boolean run = false;
 	
 	private BombState bombState;
 	
 	private long startTimeinMs;
 //	private long gameStartDurationInMs;
 	private long timeToGameStart;
+	private long timeToNextExplusion;
 	
 	public Game(){
 		this.name = "Default-Game";
@@ -31,6 +35,9 @@ public class Game implements Comparable<Game>, Serializable {
 		this.invitedUsers = new InvitedUsers();
 		this.bombState = BombState.not_exploded;
 		this.timeToGameStart = 10*1000;
+		
+		this.explusionDuration = 120*1000;
+		this.timeToNextExplusion = this.explusionDuration + this.timeToGameStart;
 	}
 	
 	public boolean joinGame(String userName){
@@ -82,7 +89,7 @@ public class Game implements Comparable<Game>, Serializable {
 		return userWithBomb;
 	}
 
-	public void setUserWithBomb(User userWithBomb) {
+	public synchronized void setUserWithBomb(User userWithBomb) {
 		this.userWithBomb = userWithBomb;
 	}
 
@@ -145,6 +152,78 @@ public class Game implements Comparable<Game>, Serializable {
 
 	public void setTimeToGameStart(long timeToGameStart) {
 		this.timeToGameStart = timeToGameStart;
+	}
+	
+	public long getTimeToNextExplusion() {
+		return timeToNextExplusion;
+	}
+
+	public void setTimeToNextExplusion(long timeToNextExplusion) {
+		this.timeToNextExplusion = timeToNextExplusion;
+	}
+	
+	public long getExplusionDuration() {
+		return explusionDuration;
+	}
+	
+	public void setGameToRun() {
+		this.run = true;
+	}
+	
+	public boolean isGameRunning() {
+		return this.run;
+	}
+	
+	public int getUsersAliveCount() {
+		
+		int count = 0;
+		Iterator<User> iterator = this.getGameUsers().getUserList().iterator();
+		while (iterator.hasNext()){
+			if(iterator.next().isAlive())
+		      count++;
+		}
+		
+		return count;
+	}
+	
+	public boolean bombExploded() {
+		
+		User u;
+		boolean ret = false;
+		
+		//set alive to false for user with bomb		
+		Iterator<User> iterator = this.getGameUsers().getUserList().iterator();
+		while (iterator.hasNext()){
+			
+			u = iterator.next();
+			if(u.compareTo(userWithBomb) == 0) {
+				u.setAlive(false);
+				System.out.println("Player " + u.getName() + " is out!");
+				ret = true;
+				break;
+			}				
+		}
+		
+		//get the next player		
+		Random randomGenerator = new Random();
+		int numberOfUserInList = randomGenerator.nextInt(this.getUsersAliveCount());
+		
+		iterator = this.getGameUsers().getUserList().iterator();
+		while (iterator.hasNext()){
+			
+			u = iterator.next();
+			if(u.isAlive()) {
+				if(numberOfUserInList <= 0) {
+					
+					userWithBomb = u;
+					System.out.println("Player " + userWithBomb.getName() + " has the bomb!");
+					return true;
+				}
+				numberOfUserInList--;
+			}			
+		}
+		
+		return ret;
 	}
 
 //	public long timeToGameStart(){
