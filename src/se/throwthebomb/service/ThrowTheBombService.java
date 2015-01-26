@@ -57,7 +57,7 @@ public class ThrowTheBombService {
 		
 		Location bombLocation = userFrom.getLocation();
 		
-		double maxAngle = 45;
+		double maxAngle = 90;
 		User futureUserWithBomb = null;
 		double smallestAngle = maxAngle;
 		
