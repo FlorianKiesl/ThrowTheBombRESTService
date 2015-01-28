@@ -51,31 +51,35 @@ public class ThrowTheBombService {
 		
 		Game game = userFrom.getCurrentGame();
 		if (game == null) return false;
+		if (game.getUserWithBomb() == null) return false;
+		if (game.getUserWithBomb().getName().compareTo(userFrom.getName()) != 0) return false;
+		
 		TreeSet<User> users = game.getGameUsers().getUserList();
 		ArrayList<User> usersAsList = new ArrayList<User>(users);
 		usersAsList.remove(userFrom);
 		
 		Location bombLocation = userFrom.getLocation();
 		
-		double maxAngle = 90;
+		double maxAngle = 30;
 		User futureUserWithBomb = null;
 		double smallestAngle = maxAngle;
 		
 		MathVector viewVector = new MathVector(xMathVector, yMathVector);
 		
 		for (User u : usersAsList) {
-			
-			Location otherUserLocation = u.getLocation();
-			MathVector directVector = new MathVector(Math.toRadians(otherUserLocation.getLongitude()) - Math.toRadians(bombLocation.getLongitude()), Math.toRadians(otherUserLocation.getLatitude()) - Math.toRadians(bombLocation.getLatitude()));
-			
-		    double angle = Math.toDegrees(Math.acos(((viewVector.getX() * directVector.getX()) + (viewVector.getY() * directVector.getY())) / directVector.getNorm()));
-		    System.out.println("angle: " + angle);
-		    if ((angle < maxAngle) && (angle < smallestAngle)) {
-		    	
-		    	smallestAngle = angle;
-		    	futureUserWithBomb = u;
-		    }
-		    
+			System.out.println("User: " + u.getName());
+			if (u.isAlive()){
+				Location otherUserLocation = u.getLocation();
+				MathVector directVector = new MathVector(Math.toRadians(otherUserLocation.getLongitude()) - Math.toRadians(bombLocation.getLongitude()), Math.toRadians(otherUserLocation.getLatitude()) - Math.toRadians(bombLocation.getLatitude()));
+				
+			    double angle = Math.toDegrees(Math.acos(((viewVector.getX() * directVector.getX()) + (viewVector.getY() * directVector.getY())) / directVector.getNorm()));
+			    System.out.println("angle: " + angle);
+			    if ((angle < maxAngle) && (angle < smallestAngle)) {
+			    	
+			    	smallestAngle = angle;
+			    	futureUserWithBomb = u;
+			    }
+			}
 		}
 		
 		if (futureUserWithBomb != null) {
@@ -134,7 +138,7 @@ public class ThrowTheBombService {
 		}
 		else{
 			ret = game.joinGame(userName);
-			
+			if (ret) System.out.println("User angemeldet: " + userName);
 			if (ret == true && game.getGameUsers().getUserList().size() == 1){
 				
 				Thread startGameThread = new Thread(){

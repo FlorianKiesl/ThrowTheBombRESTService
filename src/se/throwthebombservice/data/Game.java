@@ -36,7 +36,7 @@ public class Game implements Comparable<Game>, Serializable {
 		this.bombState = BombState.not_exploded;
 		this.timeToGameStart = 30*1000;
 		
-		this.explusionDuration = 120*1000;
+		this.explusionDuration = 45*1000;
 		this.timeToNextExplusion = this.explusionDuration + this.timeToGameStart;
 	}
 	
